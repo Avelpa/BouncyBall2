@@ -172,7 +172,6 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                     {
                         selectedBlock = 0;
                     }
-                    mwheel = 0;
                 }
                 
                 else if (save)
@@ -188,7 +187,8 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                     writer.close();
                     save = false;
                 }
-            }
+            } // end of run
+            mwheel = 0;
 
             
             // GAME LOGIC ENDS HERE 
