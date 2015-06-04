@@ -1,3 +1,4 @@
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.KeyEvent;
@@ -5,6 +6,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -16,7 +19,7 @@ import javax.swing.JFrame;
 
 
 // make sure you rename this class if you are doing a copy/paste
-public class Main extends JComponent implements MouseListener, KeyListener, MouseMotionListener{
+public class Main extends JComponent implements MouseListener, KeyListener, MouseMotionListener, MouseWheelListener{
 
     // Height and Width of our game
     static final int WIDTH = 800;
@@ -27,11 +30,14 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     long desiredFPS = 60;
     long desiredTime = (1000)/desiredFPS;
     
-    static int blockWidth = 20;
+    static int blockWidth = 50;
     
     static int[][] map = new int[HEIGHT/blockWidth][WIDTH/blockWidth];
     
-    int selectedBlock = 1;
+    int[] allBlocks = {1, -1};
+    int selectedBlock = 0;
+    
+    int currentLevel = 1;
     
     //ArrayList<Block> blocks = new ArrayList();
     
@@ -39,7 +45,9 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     boolean mouse2Pressed = false;
     boolean shift = false;
     int mx, my;
+    int mwheel;
     boolean save;
+    boolean run = false;
     
     // drawing of the game happens in here
     // we use the Graphics object, g, to perform the drawing
@@ -51,13 +59,16 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
         g.clearRect(0, 0, WIDTH, HEIGHT);
         
         // GAME DRAWING GOES HERE 
-        for (int i = 0; i < WIDTH; i += blockWidth)
+        if (!run)
         {
-            g.drawLine(i, 0, i, HEIGHT);
-        }
-        for (int i = 0; i < HEIGHT; i += blockWidth)
-        {
-            g.drawLine(0, i, WIDTH, i);
+            for (int i = 0; i < WIDTH; i += blockWidth)
+            {
+                g.drawLine(i, 0, i, HEIGHT);
+            }
+            for (int i = 0; i < HEIGHT; i += blockWidth)
+            {
+                g.drawLine(0, i, WIDTH, i);
+            }
         }
         for (int y = 0; y < map.length; y ++)
         {
@@ -67,10 +78,29 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                 int bX = x*blockWidth;
                 switch(map[y][x])
                 {
-                    case 1: 
+                    case 1:  // block
+                        g.setColor(Color.GRAY);
                         g.fillRect(bX, bY, blockWidth, blockWidth);
                         break;
+                    case -1: // player
+                        g.setColor(Color.YELLOW);
+                        g.fillRect(bX+blockWidth/2-blockWidth/10, bY + blockWidth/2-blockWidth/10, blockWidth/5, blockWidth/5);
+                        break;
                 }
+            }
+        }
+        if (!run)
+        {
+            switch(allBlocks[selectedBlock])
+            {
+                case 1:  // block
+                    g.setColor(Color.GRAY);
+                    g.fillRect(mx-blockWidth/2, my-blockWidth/2, blockWidth, blockWidth);
+                    break;
+                case -1: // player
+                    g.setColor(Color.YELLOW);
+                    g.fillRect(mx+blockWidth/2-blockWidth/10-blockWidth/2, my + blockWidth/2-blockWidth/10-blockWidth/2, blockWidth/5, blockWidth/5);
+                    break;
             }
         }
         
@@ -92,7 +122,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
         long startTime;
         long deltaTime;
         
-        loadMap("level1");
+        loadMap("level" + currentLevel);
         // the main game loop section
         // game will end if you set done = false;
         boolean done = false; 
@@ -103,43 +133,61 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
             
             // all your game rules and move is done in here
             // GAME LOGIC STARTS HERE 
-            if (mouse1Pressed)
+            if (!run)
             {
-                if (mx <= WIDTH && mx >= 0 && my <= HEIGHT && my >= 0)
+                if (mouse1Pressed)
                 {
-                    if (map[my/blockWidth][mx/blockWidth] == 0)
+                    if (mx <= WIDTH && mx >= 0 && my <= HEIGHT && my >= 0)
                     {
-                        map[my/blockWidth][mx/blockWidth] = 1;
-                    }
-                    if (!shift)
-                    {
-                        mouse1Pressed = false;
+                        if (map[my/blockWidth][mx/blockWidth] == 0)
+                        {
+                            map[my/blockWidth][mx/blockWidth] = allBlocks[selectedBlock];
+                        }
+                        if (!shift)
+                        {
+                            mouse1Pressed = false;
+                        }
                     }
                 }
-            }
-            else if (mouse2Pressed)
-            {
-                if (mx <= WIDTH && mx >= 0 && my <= HEIGHT && my >= 0)
+                else if (mouse2Pressed)
                 {
-                    map[my/blockWidth][mx/blockWidth] = 0;
-                    if (!shift)
+                    if (mx <= WIDTH && mx >= 0 && my <= HEIGHT && my >= 0)
                     {
-                        mouse2Pressed = false;
+                        map[my/blockWidth][mx/blockWidth] = 0;
+                        if (!shift)
+                        {
+                            mouse2Pressed = false;
+                        }
                     }
                 }
-            }
-            else if (save)
-            {
-                PrintWriter writer = new PrintWriter("levels\\level1.txt", "UTF-8");
-                for (int y = 0; y < map.length; y ++)
+                
+                if (mwheel != 0)
                 {
-                    for (int x = 0; x < map[y].length; x ++)
+                    selectedBlock += mwheel;
+                    if (selectedBlock < 0)
                     {
-                        writer.print(map[y][x]);
+                        selectedBlock = allBlocks.length-1;
                     }
+                    else if (selectedBlock >= allBlocks.length)
+                    {
+                        selectedBlock = 0;
+                    }
+                    mwheel = 0;
                 }
-                writer.close();
-                save = false;
+                
+                else if (save)
+                {
+                    PrintWriter writer = new PrintWriter("levels\\level1.txt", "UTF-8");
+                    for (int y = 0; y < map.length; y ++)
+                    {
+                        for (int x = 0; x < map[y].length; x ++)
+                        {
+                            writer.print(map[y][x] + ":");
+                        }
+                    }
+                    writer.close();
+                    save = false;
+                }
             }
 
             
@@ -188,11 +236,12 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     
     public static void processInfo(String info)
     {
+        String[] points = info.split(":");
         for (int y = 0; y < map.length; y ++)
         {
             for (int x = 0; x < map[y].length; x ++)
             {
-                map[y][x] = Character.getNumericValue(info.charAt(y*map[y].length+x));
+                map[y][x] = Integer.parseInt(points[y*map[y].length+x]);
             }
         }
         System.out.println(map[0][0]);
@@ -221,6 +270,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
         game.addMouseListener(game);
         game.addMouseMotionListener(game);
         frame.addKeyListener(game);
+        frame.addMouseWheelListener(game);
         // starts my game loop
         game.run();
         
@@ -276,6 +326,10 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
         {
             save = true;
         }
+        if (e.getKeyCode() == KeyEvent.VK_R)
+        {
+            run = run?false:true;
+        }
     }
 
     @Override
@@ -296,5 +350,10 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     public void mouseMoved(MouseEvent e) {
         mx = e.getX();
         my = e.getY();
+    }
+
+    @Override
+    public void mouseWheelMoved(MouseWheelEvent e) {
+        mwheel = e.getWheelRotation();
     }
 }
