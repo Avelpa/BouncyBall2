@@ -5,7 +5,10 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import javax.swing.JComponent;
@@ -24,9 +27,9 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     long desiredFPS = 60;
     long desiredTime = (1000)/desiredFPS;
     
-    int blockWidth = 20;
+    static int blockWidth = 20;
     
-    int[][] map = new int[HEIGHT/blockWidth][WIDTH/blockWidth];
+    static int[][] map = new int[HEIGHT/blockWidth][WIDTH/blockWidth];
     
     int selectedBlock = 1;
     
@@ -82,13 +85,14 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     
     // The main game loop
     // In here is where all the logic for my game will go
-    public void run() throws FileNotFoundException, UnsupportedEncodingException
+    public void run() throws FileNotFoundException, UnsupportedEncodingException, IOException
     {
         // Used to keep track of time used to draw and update the game
         // This is used to limit the framerate later on
         long startTime;
         long deltaTime;
         
+        loadMap("level1");
         // the main game loop section
         // game will end if you set done = false;
         boolean done = false; 
@@ -139,7 +143,6 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
             }
 
             
-            
             // GAME LOGIC ENDS HERE 
             
             // update the drawing (calls paintComponent)
@@ -163,10 +166,42 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
         }
     }
     
+    public static void loadMap(String mapName) throws FileNotFoundException, IOException
+    {
+        String info;
+        BufferedReader br = new BufferedReader(new FileReader("levels\\" + mapName + ".txt"));
+        try {
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                sb.append(System.lineSeparator());
+                line = br.readLine();
+            }
+            info = sb.toString();
+        } finally {
+            br.close();
+        }
+        processInfo(info);
+    }
+    
+    public static void processInfo(String info)
+    {
+        for (int y = 0; y < map.length; y ++)
+        {
+            for (int x = 0; x < map[y].length; x ++)
+            {
+                map[y][x] = Character.getNumericValue(info.charAt(y*map[y].length+x));
+            }
+        }
+        System.out.println(map[0][0]);
+    }
+    
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException {
+    public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException, IOException {
         // creates a windows to show my game
         JFrame frame = new JFrame("My Game");
        
