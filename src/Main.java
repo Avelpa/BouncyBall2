@@ -34,10 +34,12 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     
     static int[][] map = new int[HEIGHT/blockWidth][WIDTH/blockWidth];
     
-    int[] allBlocks = {1, -1};
+    int[] allBlocks = {1,2,3,-1};
     int selectedBlock = 0;
     
     int currentLevel = 1;
+    
+    int selectRegionX, selectRegionY;
     
     //ArrayList<Block> blocks = new ArrayList();
     
@@ -47,7 +49,9 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     int mx, my;
     int mwheel;
     boolean save;
-    boolean run = false;
+    boolean run;
+    boolean select;
+    boolean selectDrag;
     
     // drawing of the game happens in here
     // we use the Graphics object, g, to perform the drawing
@@ -84,24 +88,66 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                         break;
                     case -1: // player
                         g.setColor(Color.YELLOW);
-                        g.fillRect(bX+blockWidth/2-blockWidth/10, bY + blockWidth/2-blockWidth/10, blockWidth/5, blockWidth/5);
+                        g.fillOval(bX+blockWidth/2-blockWidth/5, bY + blockWidth/2-blockWidth/5, blockWidth/2, blockWidth/2);
+                        break;
+                    case 2: // green block
+                        g.setColor(Color.GREEN);
+                        g.fillRect(bX, bY, blockWidth, blockWidth);
+                        break;
+                    case 3: // blue block
+                        g.setColor(Color.BLUE);
+                        g.fillRect(bX, bY, blockWidth, blockWidth);
                         break;
                 }
             }
         }
-        if (!run)
+        if (!run && !select) // draw current selected block
         {
             switch(allBlocks[selectedBlock])
             {
-                case 1:  // block
+                case 1:  // black block
                     g.setColor(Color.GRAY);
                     g.fillRect(mx-blockWidth/2, my-blockWidth/2, blockWidth, blockWidth);
                     break;
                 case -1: // player
                     g.setColor(Color.YELLOW);
-                    g.fillRect(mx+blockWidth/2-blockWidth/10-blockWidth/2, my + blockWidth/2-blockWidth/10-blockWidth/2, blockWidth/5, blockWidth/5);
+                    g.fillOval(mx+blockWidth/2-blockWidth/5-blockWidth/2, my + blockWidth/2-blockWidth/5-blockWidth/2, blockWidth/2, blockWidth/2);
+                    break;
+                case 2: // green block
+                    g.setColor(Color.GREEN);
+                    g.fillRect(mx-blockWidth/2, my-blockWidth/2, blockWidth, blockWidth);
+                    break;
+                case 3: // blue block
+                    g.setColor(Color.BLUE);
+                    g.fillRect(mx-blockWidth/2, my-blockWidth/2, blockWidth, blockWidth);
                     break;
             }
+        }
+        else if (!run && selectDrag)
+        {
+            int startX, startY, endX, endY;
+            if (mx < selectRegionX)
+            {
+                startX = mx;
+                endX = selectRegionX;
+            }
+            else
+            {
+                startX = selectRegionX;
+                endX = mx;
+            }
+            if (my < selectRegionY)
+            {
+                startY = my;
+                endY = selectRegionY;
+            }
+            else
+            {
+                startY = selectRegionY;
+                endY = my;
+            }
+            g.setColor(Color.GREEN);
+            g.drawRect(startX, startY, endX-startX, endY-startY);
         }
         
         /*for (Block b: blocks)
@@ -133,19 +179,30 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
             
             // all your game rules and move is done in here
             // GAME LOGIC STARTS HERE 
-            if (!run)
+            if (!run) // editing
             {
                 if (mouse1Pressed)
                 {
                     if (mx <= WIDTH && mx >= 0 && my <= HEIGHT && my >= 0)
                     {
-                        if (map[my/blockWidth][mx/blockWidth] == 0)
+                        if (!select) // normal edit (not select region)
                         {
-                            map[my/blockWidth][mx/blockWidth] = allBlocks[selectedBlock];
+                            if (map[my/blockWidth][mx/blockWidth] == 0)
+                            {
+                                map[my/blockWidth][mx/blockWidth] = allBlocks[selectedBlock];
+                            }
+                            if (!shift)
+                            {
+                                mouse1Pressed = false;
+                            }
+                            
+                            
                         }
-                        if (!shift)
+                        else if (!selectDrag)
                         {
-                            mouse1Pressed = false;
+                            selectRegionX = mx; // select starting point
+                            selectRegionY = my; 
+                            selectDrag = true;
                         }
                     }
                 }
@@ -297,6 +354,11 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
         if (e.getButton() == 1)
         {
             mouse1Pressed = false;
+            if (select)
+            {
+                select = false;
+                selectDrag = false;
+            }
         }
         else if (e.getButton() == 3)
         {
@@ -329,6 +391,10 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
         if (e.getKeyCode() == KeyEvent.VK_R)
         {
             run = run?false:true;
+        }
+        if (e.getKeyCode() == KeyEvent.VK_CONTROL)
+        {
+            select = true;
         }
     }
 
