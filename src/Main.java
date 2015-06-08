@@ -50,17 +50,21 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     BufferedImage blockBreakable = ImageHelper.resize(ImageHelper.loadImage("images\\block_breakable.png"), blockWidth, blockWidth);
     BufferedImage blockHighjump = ImageHelper.resize(ImageHelper.loadImage("images\\block_highjump.png"), blockWidth, blockWidth);
     BufferedImage spikesHalf = ImageHelper.resize(ImageHelper.loadImage("images\\spikes_half.png"), blockWidth, blockWidth);
+    BufferedImage flyingBlockLeft = ImageHelper.resize(ImageHelper.loadImage("images\\flying_block.png"), blockWidth, blockWidth);
+    BufferedImage flyingBlockRight = ImageHelper.horizontalflip(ImageHelper.resize(ImageHelper.loadImage("images\\flying_block.png"), blockWidth, blockWidth));
+    
     
     
     int numStars = 0;
     
-    int[] allBlocks = {1,2,3,4,5,-1, 100};
+    int[] allBlocks = {1,2,3,4,5,6,-1, 100};
     /*
         1 = blockNormal
         2 = breakBlock
         3 = highjump
         4 = spikes
-        5 = flying block
+        5 = flying block left
+        6 = flying block right
         -1 = player
         100 = star
     */
@@ -68,7 +72,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     
     int selectedBlock = 0;
     
-    int currentLevel = 8;
+    int currentLevel = 15;
     
     int selectRegionX, selectRegionY;
     
@@ -81,7 +85,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     //static final double grav = 0.2/(25.0/800)*(1.0/blockWidth);
     
     //final double jumpSpeed = -(4.5/0.2)*grav;
-    final double jumpSpeed = -Math.sqrt(2*grav*(blockWidth*2-playerWidth/2)); // bounce 2 blocks high
+    final double jumpSpeed = -Math.sqrt(2*grav*((double)blockWidth*2-(double)playerWidth/1.2)); // bounce 2 blocks high
     
     final double moveSpeed = (blockWidth*3+playerWidth/2)/bounceTime/2; // bounce three blocks max
     
@@ -156,6 +160,12 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                     case 4: // spikes normal
                         g.drawImage(spikesHalf, bX, bY, null);
                         break;
+                    case 5: // flyingblock left
+                        g.drawImage(flyingBlockLeft, bX, bY, null);
+                        break;
+                    case 6:
+                        g.drawImage(flyingBlockRight, bX, bY, null);
+                        break;
                     case 100: // star
                         g.drawImage(starNormal, bX, bY, null);
                         break;
@@ -184,6 +194,12 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                     break;
                 case 4: // blue block
                     g.drawImage(spikesHalf, mx-blockWidth/2, my-blockWidth/2, null);
+                    break;
+                case 5: // flying block left
+                    g.drawImage(flyingBlockLeft, mx-blockWidth/2, my-blockWidth/2, null);
+                    break;
+                case 6: // flying block right
+                    g.drawImage(flyingBlockRight, mx-blockWidth/2, my-blockWidth/2, null);
                     break;
                 case 100: // star
                     g.drawImage(starNormal, mx-blockWidth/2, my-blockWidth/2, null);
@@ -320,28 +336,31 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                 }
                 
                 
-            } // end of run
+            }  //actual run
             else
             {
                 int collideBlock1, collideBlock2;
                 
-                
+                if (a || d)
+                {
+                    flyingSpeed = 0;
+                }
+                // move horizontally
+                if (a)
+                {
+                    playerSpeedX = -moveSpeed;
+                } 
+                if (d)
+                {
+                    playerSpeedX = moveSpeed;
+                }
+                if (!d && !a || d && a)
+                {
+                    playerSpeedX = 0;
+                }
                 if (flyingSpeed == 0)
                 {
-                    // move horizontally
-                   if (a)
-                   {
-                       playerSpeedX = -moveSpeed;
-                   }
-                   if (d)
-                   {
-                       playerSpeedX = moveSpeed;
-                   }
-                   if (!d && !a || d && a)
-                   {
-                       playerSpeedX = 0;
-                   }
-                   playerX += playerSpeedX;
+                    playerX += playerSpeedX;
                 }
                 else
                 {
@@ -390,43 +409,50 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                 }
                 
                 
-                // collide bottom LEFT and RIGHT (for breakable blocks -- break 2 at a time)
-                if ((collideBlock1=map[((int)playerY+playerWidth)/blockWidth][(int)playerX/blockWidth]) == 2 && (map[((int)playerY+playerWidth)/blockWidth][((int)playerX+playerWidth)/blockWidth]) == 2)
+                if (playerSpeedY > 0)
                 {
-                    map[((int)playerY+playerWidth)/blockWidth][((int)playerX+playerWidth)/blockWidth] = 0; // sets one on right to 0 immediately
-                    collideDown(collideBlock1, ((int)playerY+playerWidth)/blockWidth,((int)playerX)/blockWidth); // collides only with left one
-                }
-                // bottom one at a time
-                else 
-                {
-                    // bottom left
-                    if ((collideBlock1=map[((int)playerY+playerWidth)/blockWidth][(int)playerX/blockWidth]) > 0)
+                    // collide bottom LEFT and RIGHT (for breakable blocks -- break 2 at a time)
+                    if ((collideBlock1=map[((int)playerY+playerWidth)/blockWidth][(int)playerX/blockWidth]) == 2 && (map[((int)playerY+playerWidth)/blockWidth][((int)playerX+playerWidth)/blockWidth]) == 2)
                     {
-                        collideDown (collideBlock1, ((int)playerY+playerWidth)/blockWidth,((int)playerX)/blockWidth);
+                        map[((int)playerY+playerWidth)/blockWidth][((int)playerX+playerWidth)/blockWidth] = 0; // sets one on right to 0 immediately
+                        collideDown(collideBlock1, ((int)playerY+playerWidth)/blockWidth,((int)playerX)/blockWidth); // collides only with left one
                     }
-                    // bottom right
-                    if ((collideBlock1=map[((int)playerY+playerWidth)/blockWidth][((int)playerX+playerWidth)/blockWidth]) > 0)
+                    // bottom one at a time
+                    else 
                     {
-                        collideDown (collideBlock1, ((int)playerY+playerWidth)/blockWidth, ((int)playerX+playerWidth)/blockWidth);
+                        // bottom left
+                        if ((collideBlock1=map[((int)playerY+playerWidth)/blockWidth][(int)playerX/blockWidth]) > 0)
+                        {
+                            collideDown (collideBlock1, ((int)playerY+playerWidth)/blockWidth,((int)playerX)/blockWidth);
+                        }
+                        // bottom right
+                        if ((collideBlock1=map[((int)playerY+playerWidth)/blockWidth][((int)playerX+playerWidth)/blockWidth]) > 0)
+                        {
+                            collideDown (collideBlock1, ((int)playerY+playerWidth)/blockWidth, ((int)playerX+playerWidth)/blockWidth);
+                        }
                     }
                 }
-                // top left
-                if ((collideBlock1=map[((int)playerY)/blockWidth][((int)playerX)/blockWidth]) > 0)
+                else if (playerSpeedY < 0)
                 {
-                    collideUp (collideBlock1, ((int)playerY)/blockWidth,((int)playerX)/blockWidth);
-                }
-                // top right
-                if ((collideBlock1=map[((int)playerY)/blockWidth][((int)playerX+playerWidth)/blockWidth]) > 0)
-                {
-                    collideUp (collideBlock1, ((int)playerY)/blockWidth, ((int)playerX+playerWidth)/blockWidth);
-                }
-                
-                //check numStars 0, switch level
-                if (numStars == 0) // inside run loop cause don't want to switch levels in editor if no stars placed
-                {
-                    levelLoaded = false;
-                    currentLevel ++;
-                    continue;
+                    
+                    // top left
+                    if ((collideBlock1=map[((int)playerY)/blockWidth][((int)playerX)/blockWidth]) > 0)
+                    {
+                        collideUp (collideBlock1, ((int)playerY)/blockWidth,((int)playerX)/blockWidth);
+                    }
+                    // top right
+                    if ((collideBlock1=map[((int)playerY)/blockWidth][((int)playerX+playerWidth)/blockWidth]) > 0)
+                    {
+                        collideUp (collideBlock1, ((int)playerY)/blockWidth, ((int)playerX+playerWidth)/blockWidth);
+                    }
+
+                    //check numStars 0, switch level
+                    if (numStars == 0) // inside run loop cause don't want to switch levels in editor if no stars placed
+                    {
+                        levelLoaded = false;
+                        currentLevel ++;
+                        continue;
+                    }
                 }
             }
             mwheel = 0;
@@ -527,7 +553,12 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     {
         switch (collideBlock)
         {
-            case 1: // normal block
+            case 2: // break block
+            case 3: // high jump
+            case 4: // spikes half
+            case 5: // flying block left
+            case 6: // flying block right
+            case 1: // blockNormal
                 playerX = (int)playerX/blockWidth*blockWidth+blockWidth;
                 playerSpeedX = 0;
                 break;
@@ -535,13 +566,19 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                 collideAnySide(collideBlock, bYIndex, bXIndex);
                 break;
         }
+        flyingSpeed = 0;
     }
     
     public void collideRight(int collideBlock, int bYIndex, int bXIndex)
     {
         switch (collideBlock)
         {
-            case 1:
+            case 2: // break block
+            case 3: // high jump
+            case 4: // spikes half
+            case 5: // flying block left
+            case 6: // flying block right
+            case 1: // blockNormal
                 playerX = ((int)playerX+playerWidth)/blockWidth*blockWidth-playerWidth-1;
                 playerSpeedX = 0;
                 break;
@@ -549,12 +586,18 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                 collideAnySide(collideBlock, bYIndex, bXIndex);
                 break;
         }
+        flyingSpeed = 0;
     }
     
     public void collideUp(int collideBlock, int bYIndex, int bXIndex)
     {
         switch (collideBlock)
         {
+            case 2: // break block
+            case 3: // high jump
+            case 4: // spikes half
+            case 5: // flying block left
+            case 6: // flying block right
             case 1: // blockNormal
                 playerY = (int)playerY/blockWidth*blockWidth+blockWidth;
                 playerSpeedY = 0;
@@ -569,7 +612,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     {
         switch (collideBlock)
         {
-            case 2:
+            case 2: // break block
                 map[bYIndex][bXIndex] = 0;
             case 1: // normalBlock
                 playerY = ((int)playerY+playerWidth)/blockWidth*blockWidth-playerWidth-1; // offset by one because dumb grid
@@ -577,14 +620,22 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                 break;
             case 3: // high jump
                 playerY = ((int)playerY+playerWidth)/blockWidth*blockWidth-playerWidth-1; // offset by one because dumb grid
-                playerSpeedY = jumpSpeed*1.4;
+                playerSpeedY = jumpSpeed*1.6;
                 break;
             case 4: // spikes half
                 levelLoaded = false;
                 break;
-            case 5: // spikes half
-                playerY = ((int)playerY+playerWidth)/blockWidth*blockWidth+playerWidth/2;
-                flyingSpeed = -7;
+            case 5: // flying block left
+                playerY = bYIndex*blockWidth+blockWidth/2-playerWidth/2;
+                playerX = bXIndex*blockWidth-playerWidth;
+                flyingSpeed = -10;
+                playerSpeedY = 0;
+                break;
+            case 6: // flying block right
+                playerY = bYIndex*blockWidth+blockWidth/2-playerWidth/2;
+                playerX = bXIndex*blockWidth+blockWidth;
+                flyingSpeed = 10;
+                playerSpeedY = 0;
                 break;
             case 100: // star
                 collideAnySide(collideBlock, bYIndex, bXIndex);
