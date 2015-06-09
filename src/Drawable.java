@@ -1,5 +1,6 @@
 
 import java.awt.Graphics;
+import java.awt.Rectangle;
 
 /*
  * To change this template, choose Tools | Templates
@@ -10,6 +11,6 @@ import java.awt.Graphics;
  *
  * @author kobed6328
  */
-public interface Drawable {
-    public void draw(Graphics g);
+public abstract class Drawable extends Rectangle{
+    public abstract void draw(Graphics g);
 }

@@ -1,7 +1,6 @@
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Rectangle;
 
 /*
  * To change this template, choose Tools | Templates
@@ -12,13 +11,13 @@ import java.awt.Rectangle;
  *
  * @author kobed6328
  */
-public class Block extends Rectangle implements Drawable{
+public class Block extends Drawable{
 
     private Color c = Color.BLACK;
     
     public Block (int x, int y, int width, int height)
     {
-        super(x, y, width, height);
+        //super(x, y, width, height);
     }
     
     @Override

@@ -52,12 +52,11 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     BufferedImage spikesHalf = ImageHelper.resize(ImageHelper.loadImage("images\\spikes_half.png"), blockWidth, blockWidth);
     BufferedImage flyingBlockLeft = ImageHelper.resize(ImageHelper.loadImage("images\\flying_block.png"), blockWidth, blockWidth);
     BufferedImage flyingBlockRight = ImageHelper.horizontalflip(ImageHelper.resize(ImageHelper.loadImage("images\\flying_block.png"), blockWidth, blockWidth));
-    
-    
+    BufferedImage blockBarrier = ImageHelper.horizontalflip(ImageHelper.resize(ImageHelper.loadImage("images\\block_barrier.png"), blockWidth, blockWidth));
     
     int numStars = 0;
     
-    int[] allBlocks = {1,2,3,4,5,6,-1, 100};
+    int[] allBlocks = {1,2,3,4,5,6,7,-1, 100};
     /*
         1 = blockNormal
         2 = breakBlock
@@ -65,6 +64,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
         4 = spikes
         5 = flying block left
         6 = flying block right
+        7 = barrier
         -1 = player
         100 = star
     */
@@ -166,6 +166,9 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                     case 6:
                         g.drawImage(flyingBlockRight, bX, bY, null);
                         break;
+                    case 7:
+                        g.drawImage(blockBarrier, bX, bY, null);
+                        break;
                     case 100: // star
                         g.drawImage(starNormal, bX, bY, null);
                         break;
@@ -200,6 +203,9 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                     break;
                 case 6: // flying block right
                     g.drawImage(flyingBlockRight, mx-blockWidth/2, my-blockWidth/2, null);
+                    break;
+                case 7:
+                    g.drawImage(blockBarrier, mx-blockWidth/2, my-blockWidth/2, null);
                     break;
                 case 100: // star
                     g.drawImage(starNormal, mx-blockWidth/2, my-blockWidth/2, null);
@@ -561,12 +567,13 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
             case 1: // blockNormal
                 playerX = (int)playerX/blockWidth*blockWidth+blockWidth;
                 playerSpeedX = 0;
+                flyingSpeed = 0;
                 break;
             case 100: // star
                 collideAnySide(collideBlock, bYIndex, bXIndex);
                 break;
         }
-        flyingSpeed = 0;
+        
     }
     
     public void collideRight(int collideBlock, int bYIndex, int bXIndex)
@@ -581,12 +588,13 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
             case 1: // blockNormal
                 playerX = ((int)playerX+playerWidth)/blockWidth*blockWidth-playerWidth-1;
                 playerSpeedX = 0;
+                flyingSpeed = 0;
                 break;
             case 100: // star
                 collideAnySide(collideBlock, bYIndex, bXIndex);
                 break;
         }
-        flyingSpeed = 0;
+        
     }
     
     public void collideUp(int collideBlock, int bYIndex, int bXIndex)
