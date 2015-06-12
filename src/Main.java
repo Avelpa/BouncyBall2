@@ -1,3 +1,4 @@
+import Blocks.ImageHelper;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -623,6 +624,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
             case 2: // break block
                 map[bYIndex][bXIndex] = 0;
             case 1: // normalBlock
+                blockNormal
                 playerY = ((int)playerY+playerWidth)/blockWidth*blockWidth-playerWidth-1; // offset by one because dumb grid
                 playerSpeedY = jumpSpeed;
                 break;
