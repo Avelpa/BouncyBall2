@@ -1,4 +1,4 @@
-import Blocks.ImageHelper;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -18,8 +18,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-
-
+import blocks.*;
 // make sure you rename this class if you are doing a copy/paste
 public class Main extends JComponent implements MouseListener, KeyListener, MouseMotionListener, MouseWheelListener{
 
@@ -32,7 +31,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     long desiredFPS = 60;
     long desiredTime = (1000)/desiredFPS;
     
-    static int blockWidth = WIDTH/25;
+    int sideLength = WIDTH/25;
     
     static int playerWidth = blockWidth/2;
     static double playerX, playerY;
@@ -43,8 +42,8 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     
     boolean initialLoad = true;
     
-    static int[][] map = new int[HEIGHT/blockWidth][WIDTH/blockWidth];
-    
+    static Block[][] map = new Block[HEIGHT/blockWidth][WIDTH/blockWidth];
+    /*
     BufferedImage blockNormal = ImageHelper.resize(ImageHelper.loadImage("images\\block_normal.png"), blockWidth, blockWidth);
     BufferedImage ballNormal = ImageHelper.resize(ImageHelper.loadImage("images\\ball_normal.png"), playerWidth, playerWidth);
     BufferedImage starNormal = ImageHelper.resize(ImageHelper.loadImage("images\\star_normal.png"), blockWidth, blockWidth);
@@ -54,7 +53,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     BufferedImage flyingBlockLeft = ImageHelper.resize(ImageHelper.loadImage("images\\flying_block.png"), blockWidth, blockWidth);
     BufferedImage flyingBlockRight = ImageHelper.horizontalflip(ImageHelper.resize(ImageHelper.loadImage("images\\flying_block.png"), blockWidth, blockWidth));
     BufferedImage blockBarrier = ImageHelper.horizontalflip(ImageHelper.resize(ImageHelper.loadImage("images\\block_barrier.png"), blockWidth, blockWidth));
-    
+    */
     int numStars = 0;
     
     int[] allBlocks = {1,2,3,4,5,6,7,-1, 100};
@@ -80,7 +79,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     //ArrayList<Block> blocks = new ArrayList();
     
     
-    
+   
     double bounceTime = Math.sqrt((800/25)*2*2/0.2);
     final double grav = 2*blockWidth*2/bounceTime/bounceTime; // mimick real game's gravity -- comparison is 0.2 grav / 800/25 block width
     //static final double grav = 0.2/(25.0/800)*(1.0/blockWidth);
@@ -489,6 +488,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
     
     public void loadMap(String mapName) throws FileNotFoundException, IOException
     {
+        BlockBuilder.setBlockSideLength(sideLength);
         playerX = 0;
         playerY = 0;
         playerSpeedX = 0;
@@ -537,7 +537,24 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
         {
             for (int x = 0; x < map[y].length; x ++)
             {
+                switch (Integer.parseInt(points[y*map[y].length+x]))
+                {
+                    case 1:
+                        map[y][x] = new NormalBlock(x*sideLength, y*sideLength, "block_normal");
+                        break;
+                    case 2:
+                        map[y][x] = new BreakableBlock(x*sideLength, y*sideLength, "block_breakable");
+                        break;
+                    case 3:
+                        map[y][x] = new BreakableBlock(x*sideLength, y*sideLength, "block_highjump");
+                        break;
+                    case 4:
+                        map[y][x] = new BreakableBlock(x*sideLength, y*sideLength, "spikes_half");
+                        break;
+                }
+                /*
                 map[y][x] = Integer.parseInt(points[y*map[y].length+x]);
+                
                 if (map[y][x] == -1)
                 {
                     playerX = x*blockWidth+playerWidth-playerWidth/2;
@@ -546,7 +563,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
                 else if (map[y][x] == 100)
                 {
                     numStars ++;
-                }
+                }*/
             }
         }
     }
@@ -624,7 +641,7 @@ public class Main extends JComponent implements MouseListener, KeyListener, Mous
             case 2: // break block
                 map[bYIndex][bXIndex] = 0;
             case 1: // normalBlock
-                blockNormal
+                
                 playerY = ((int)playerY+playerWidth)/blockWidth*blockWidth-playerWidth-1; // offset by one because dumb grid
                 playerSpeedY = jumpSpeed;
                 break;
